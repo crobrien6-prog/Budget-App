@@ -5,10 +5,10 @@
 
 body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background: #f7f9fc;
+  background: #f7;
   margin: 0;
   padding: 20px;
-  color: #2;
+  color: #333;
 }
 
 .container {
