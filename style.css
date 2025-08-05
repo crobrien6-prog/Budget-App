@@ -1,0 +1,169 @@
+/* Reset and base */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: #f7f9fc;
+  margin: 0;
+  padding: 20px;
+  color: #333;
+}
+
+.container {
+  max-width: 650px;
+  margin: 0 auto;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  padding: 30px;
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 25px;
+  color: #2c387e;
+}
+
+.budget-summary {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 25px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #555;
+}
+
+form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-bottom: 25px;
+  align-items: center;
+}
+
+form label {
+  flex-basis: 100%;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: #444;
+}
+
+form input[type="text"],
+form input[type="number"] {
+  flex-grow: 1;
+  padding: 10px 12px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  font-size: 1rem;
+  transition: border-color 0.3s ease;
+}
+
+form input[type="text"]:focus,
+form input[type="number"]:focus {
+  border-color: #2c387e;
+  outline: none;
+}
+
+form button {
+  padding: 10px 22px;
+  background-color: #2c387e;
+  border: none;
+  border-radius: 5px;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+form button:hover {
+  background-color: #3949ab;
+}
+
+.expense-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 25px;
+}
+
+.expense-table th,
+.expense-table td {
+  border: 1px solid #ddd;
+  padding: 12px 15px;
+  text-align: left;
+  font-size: 1rem;
+}
+
+.expense-table th {
+  background-color: #f0f0f0;
+  color: #555;
+  font-weight: 700;
+}
+
+.expense-table tbody tr:hover {
+  background-color: #f9f9f9;
+}
+
+.delete-btn {
+  background-color: #ef5350;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  color: white;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 0.3s ease;
+}
+
+.delete-btn:hover {
+  background-color: #d32f2f;
+}
+
+.chart-container {
+  max-width: 400px;
+  margin: 0 auto 25px auto;
+}
+
+.reset-btn {
+  text-align: center;
+}
+
+.reset-btn button {
+  background-color: #757575;
+  border: none;
+  padding: 10px 25px;
+  border-radius: 5px;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.reset-btn button:hover {
+  background-color: #494949;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .budget-summary {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  form {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  form input[type="text"],
+  form input[type="number"],
+  form button {
+    flex-grow: 0;
+    width: 100%;
+  }
+  
+  .chart-container {
+    max-width: 100%;
+  }
+}

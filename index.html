@@ -1,0 +1,227 @@
+<index.html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Budget Tracker</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="container">
+    <h1>Budget Tracker</h1>
+
+    <div class="budget-summary">
+      <p>Budget: $<span id="budgetDisplay">0.00</span></p>
+      <p>Spent: $<span id="spentDisplay">0.00</span></p>
+      <p>Remaining: $<span id="remainingDisplay">0.00</span></p>
+    </div>
+
+    <form id="budgetForm">
+      <label for="budgetInput">Set Budget Limit:</label>
+      <input type="number" id="budgetInput" min="0" step="0.01" placeholder="Enter budget" required />
+      <button type="submit">Set Budget</button>
+    </form>
+
+    <form id="expenseForm">
+      <label for="expenseName">Expense Name:</label>
+      <input type="text" id="expenseName" placeholder="e.g. Groceries" required />
+      <label for="expenseAmount">Amount:</label>
+      <input type="number" id="expenseAmount" min="0" step="0.01" placeholder="e.g. 25.00" required />
+      <button type="submit">Add Expense</button>
+    </form>
+
+    <table class="expense-table">
+      <thead>
+        <tr>
+          <th>Item</th>
+          <th>Amount</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="expenseTableBody"></tbody>
+    </table>
+
+    <div class="chart-container">
+      <canvas id="expenseChart" width="400" height="400"></canvas>
+    </div>
+
+    <div class="reset-btn">
+      <button id="resetBtn">Reset All Data</button>
+    </div>
+  </div>
+
+<script>
+  // Load data from localStorage or init defaults
+  let expenses = JSON.parse(localStorage.getItem('expenses')) || [];
+  let budgetLimit = parseFloat(localStorage.getItem('budgetLimit')) || 0;
+
+  const budgetDisplay = document.getElementById('budgetDisplay');
+  const spentDisplay = document.getElementById('spentDisplay');
+  const remainingDisplay = document.getElementById('remainingDisplay');
+
+  const expenseTableBody = document.getElementById('expenseTableBody');
+  const budgetInput = document.getElementById('budgetInput');
+  const expenseNameInput = document.getElementById('expenseName');
+  const expenseAmountInput = document.getElementById('expenseAmount');
+
+  // Setup Chart.js doughnut chart
+  const ctx = document.getElementById('expenseChart').getContext('2d');
+  const chart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: [],
+      datasets: [{
+        data: [],
+        backgroundColor: [],
+        borderWidth: 1,
+        borderColor: '#fff',
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {
+          position: 'right',
+          labels: {
+            boxWidth: 18,
+            padding: 12,
+            font: { size: 14 }
+          }
+        },
+        tooltip: {
+          callbacks: {
+            label: ctx => ctx.label + ': $' + ctx.parsed.toFixed(2)
+          }
+        }
+      }
+    }
+  });
+
+  // Utility: generate colors cycling through palette
+  function generateColors(n) {
+    const colors = [
+      '#5c6bc0', '#42a5f5', '#66bb6a', '#ffca28', '#ef5350',
+      '#ab47bc', '#26a69a', '#8d6e63', '#78909c', '#d4e157'
+    ];
+    return Array.from({length: n}, (_, i) => colors[i % colors.length]);
+  }
+
+  // Render expenses in table
+  function renderExpenses() {
+    expenseTableBody.innerHTML = '';
+    expenses.forEach((expense, i) => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${expense.name}</td>
+        <td>$${expense.amount.toFixed(2)}</td>
+        <td><button class="delete-btn" data-index="${i}">Delete</button></td>
+      `;
+      expenseTableBody.appendChild(tr);
+    });
+
+    // Add event listeners for delete buttons
+    document.querySelectorAll('.delete-btn').forEach(btn => {
+      btn.addEventListener('click', e => {
+        const index = e.target.getAttribute('data-index');
+        deleteExpense(index);
+      });
+    });
+  }
+
+  // Delete expense and update
+  function deleteExpense(index) {
+    expenses.splice(index, 1);
+    localStorage.setItem('expenses', JSON.stringify(expenses));
+    updateUI();
+  }
+
+  // Update chart with expenses + remaining
+  function updateChart() {
+    const spent = expenses.reduce((sum, e) => sum + e.amount, 0);
+    const remaining = Math.max(budgetLimit - spent, 0);
+
+    if (budgetLimit === 0) {
+      chart.data.labels = ['No budget set'];
+      chart.data.datasets[0].data = [1];
+      chart.data.datasets[0].backgroundColor = ['#cfd8dc'];
+    } else if (expenses.length === 0) {
+      // No expenses, full budget remaining
+      chart.data.labels = ['Remaining'];
+      chart.data.datasets[0].data = [budgetLimit];
+      chart.data.datasets[0].backgroundColor = ['#cfd8dc'];
+    } else {
+      chart.data.labels = [...expenses.map(e => e.name), 'Remaining'];
+      chart.data.datasets[0].data = [...expenses.map(e => e.amount), remaining];
+      const expenseColors = generateColors(expenses.length);
+      chart.data.datasets[0].backgroundColor = [...expenseColors, '#cfd8dc'];
+    }
+    chart.update();
+  }
+
+  // Update budget summary display
+  function updateBudgetSummary() {
+    const spent = expenses.reduce((sum, e) => sum + e.amount, 0);
+    const remaining = budgetLimit - spent;
+    budgetDisplay.textContent = budgetLimit.toFixed(2);
+    spentDisplay.textContent = spent.toFixed(2);
+    remainingDisplay.textContent = remaining.toFixed(2);
+  }
+
+  // Main UI update function
+  function updateUI() {
+    renderExpenses();
+    updateChart();
+    updateBudgetSummary();
+  }
+
+  // Set budget form handler
+  document.getElementById('budgetForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const val = parseFloat(budgetInput.value);
+    if (isNaN(val) || val < 0) {
+      alert('Please enter a valid budget');
+      return;
+    }
+    budgetLimit = val;
+    localStorage.setItem('budgetLimit', budgetLimit);
+    budgetInput.value = '';
+    updateUI();
+  });
+
+  // Add expense form handler
+  document.getElementById('expenseForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const name = expenseNameInput.value.trim();
+    const amount = parseFloat(expenseAmountInput.value);
+    if (!name) {
+      alert('Enter an expense name');
+      return;
+    }
+    if (isNaN(amount) || amount <= 0) {
+      alert('Enter a valid amount greater than 0');
+      return;
+    }
+    expenses.push({ name, amount });
+    localStorage.setItem('expenses', JSON.stringify(expenses));
+    expenseNameInput.value = '';
+    expenseAmountInput.value = '';
+    updateUI();
+  });
+
+  // Reset button handler
+  document.getElementById('resetBtn').addEventListener('click', () => {
+    if (confirm('Reset all budget and expenses?')) {
+      localStorage.removeItem('budgetLimit');
+      localStorage.removeItem('expenses');
+      budgetLimit = 0;
+      expenses = [];
+      updateUI();
+    }
+  });
+
+  // Initial UI update on page load
+  updateUI();
+</script>
+</body>
+</html>
